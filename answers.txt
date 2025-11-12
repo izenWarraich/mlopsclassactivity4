@@ -1,0 +1,55 @@
+1 - How does CI/CD improve collaboration in ML teams?
+
+CI/CD (Continuous Integration / Continuous Deployment) helps ML teams collaborate effectively in the following ways:
+
+Automated testing and validation: Every code change triggers workflows that test preprocessing, training, and evaluation automatically. This reduces errors when multiple people work on the same repository.
+Consistent environment: Using Docker or virtual environments ensures that everyone runs code in the same environment, avoiding “it works on my machine” issues.
+Rapid feedback: Team members get immediate feedback on whether their changes break training pipelines, evaluation metrics, or deployment.
+Version control integration: CI/CD automatically runs on pull requests, ensuring that every model update is reviewed, tested, and validated before merging.
+Collaboration at scale: Multiple ML engineers, data scientists, and DevOps engineers can work simultaneously without overwriting each other’s work.
+Example: If Alice updates preprocessing logic and Bob updates the model, CI/CD ensures their changes are tested together before deployment.
+
+
+2 - What happens if the evaluation score is below a defined threshold?
+
+In a robust CI/CD setup, you can define a “quality gate”:
+Example: If accuracy < 90%, the workflow fails.
+Actions that can be taken automatically:
+Stop the workflow and prevent deployment.
+Notify the team via email or Slack.
+Log metrics for monitoring and debugging.
+In your current workflow: You can add a Python check in evaluate.py:
+if accuracy < 0.9:
+    raise ValueError(f"Model accuracy {accuracy:.2f} below threshold")
+This will fail the CI run, which is visible in GitHub Actions.
+
+
+3 - How can retraining or drift detection be integrated into this workflow?
+
+Retraining triggers:
+Schedule workflows to retrain periodically (e.g., weekly) or when new data arrives.
+GitHub Actions can be triggered by schedule: in the YAML workflow.
+Data drift detection:
+Add a step in the workflow to compare incoming data distribution vs. training data.
+If drift is detected (e.g., mean of a feature changes by >10%), automatically trigger retraining.
+Versioning models:
+Use github.run_number or timestamped model names to store multiple versions.
+This makes it easy to roll back if a retrained model underperforms.
+
+
+4 - What steps are needed to deploy this workflow to production (e.g., AWS, Kubernetes)?
+
+Containerize the model
+Use Dockerfile.serve to build a Docker image for serving the trained model.
+Push the image to a registry
+Example: DockerHub, AWS ECR, or GCP Artifact Registry.
+Deploy to a server or cluster
+AWS: ECS, EKS (Kubernetes), or SageMaker endpoints.
+Kubernetes: Create Deployment + Service YAML, mount config and secrets.
+Automate deployment
+Extend your CI/CD workflow:
+After training & evaluation, push the Docker image.
+Deploy to staging/production cluster automatically.
+Monitoring & rollback
+Track performance metrics (accuracy, latency) in production.
+If performance drops, trigger automated rollback to previous stable model.
